@@ -101,7 +101,6 @@ def main():
 
 def sanitize(file_name):
     sanitized = os.path.normpath(os.sep + file_name).lstrip(os.sep)
-    print sanitized
     return sanitized
 
 
