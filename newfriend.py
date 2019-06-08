@@ -23,12 +23,12 @@ class ByUsername(object):
                 nbt_file = nbt.NBTFile(sanitize(NBT_FILE_PATH + str(valid_id) + ".dat"), "rb")
                 for tag in nbt_file["bukkit"].tags:
                     if tag.name == "firstPlayed":
-                        return json.dumps({"joindate": str(tag.value)})
-                return json.dumps({"joindate": "old"})
+                        return json.dumps({"uuid": str(valid_id),"joindate": str(tag.value)})
+                return json.dumps({"uuid": str(valid_id),"joindate": "old"})
             except IOError :
-                return json.dumps({"joindate": "unknown"})
+                return json.dumps({"uuid": str(valid_id),"joindate": "unknown"})
         else:
-            return json.dumps({"joindate": "unknown"})
+            return json.dumps({"uuid": "none","joindate": "unknown"})
 
 
 class ByUUID(object):
@@ -40,10 +40,10 @@ class ByUUID(object):
             nbt_file = nbt.NBTFile(sanitize(NBT_FILE_PATH + uuid + ".dat"), "rb")
             for tag in nbt_file["bukkit"].tags:
                 if tag.name == "firstPlayed":
-                    return json.dumps({"joindate": str(tag.value)})
-            return json.dumps({"joindate": "old"})
+                    return json.dumps({"uuid": str(uuid),"joindate": str(tag.value)})
+            return json.dumps({"uuid": str(uuid),"joindate": "old"})
         except IOError :
-            return json.dumps({"joindate": "unknown"})
+            return json.dumps({"uuid": str(uuid),"joindate": "unknown"})
 
 
 class WebService:
