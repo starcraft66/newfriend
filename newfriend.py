@@ -5,8 +5,10 @@ import requests
 import json
 import uuid
 import newfriendconfig
+import re
 
 NBT_FILE_PATH = ""
+UUIDV4 = re.compile("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[4][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$")
 
 
 class ByUsername(object):
@@ -19,8 +21,10 @@ class ByUsername(object):
             resp = json.loads(r.content)
             id = resp["id"]
             valid_id = uuid.UUID(id)
+            if not UUIDV4.match(str(valid_id)):
+                return json.dumps({"uuid": "invalid","joindate": "unknown"})
             try:
-                nbt_file = nbt.NBTFile(sanitize(NBT_FILE_PATH + str(valid_id) + ".dat"), "rb")
+                nbt_file = nbt.NBTFile(os.path.join(NBT_FILE_PATH, str(valid_id) + ".dat"), "rb")
                 for tag in nbt_file["bukkit"].tags:
                     if tag.name == "firstPlayed":
                         return json.dumps({"uuid": str(valid_id),"joindate": str(tag.value)})
@@ -36,8 +40,10 @@ class ByUUID(object):
 
     @cherrypy.tools.accept(media='text/plain')
     def GET(self, uuid=None):
+        if not UUIDV4.match(uuid):
+            return json.dumps({"uuid": "invalid","joindate": "unknown"})
         try:
-            nbt_file = nbt.NBTFile(sanitize(NBT_FILE_PATH + uuid + ".dat"), "rb")
+            nbt_file = nbt.NBTFile(os.path.join(NBT_FILE_PATH, uuid + ".dat"), "rb")
             for tag in nbt_file["bukkit"].tags:
                 if tag.name == "firstPlayed":
                     return json.dumps({"uuid": str(uuid),"joindate": str(tag.value)})
@@ -66,7 +72,7 @@ class Root(object):
 
 def main():
     path = os.path.abspath(os.path.dirname(__file__))
-    config = newfriendconfig.Configuration(path + os.sep + "config.json")
+    config = newfriendconfig.Configuration(os.path.join(path, "config.json"))
     global NBT_FILE_PATH
     NBT_FILE_PATH = config.nbt_file_path
     api_config = {
@@ -97,11 +103,6 @@ def main():
         web.start(port=config.port)
     except KeyboardInterrupt:
         web.stop()
-
-
-def sanitize(file_name):
-    sanitized = os.path.normpath(os.sep + file_name).lstrip(os.sep)
-    return sanitized
 
 
 if __name__ == '__main__':
